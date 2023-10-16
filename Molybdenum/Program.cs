@@ -13,13 +13,19 @@ namespace Molybdenum
 
         static void Main(string[] args)
         {
+            // Запуск программы
+            Console.WriteLine("*************************************");
+            Console.WriteLine("************  Molybdenum  ***********");
+            Console.WriteLine("***************  v 1.0  *************");
+            Console.WriteLine("*************************************\n\n");
+
             // Количество итераций
             const int Iterations = 10000;
 
             // Список результатов.
             // Комментарий переводчика. Понятия не имею, зачем тут нужен трёхмерный массив, по всем данным достаточно двумерного.
             // Я же использую одномерный список (массив будет в C# статичным, то есть с заранее заданным размером, а нам оно не надо) элементов класса Point.
-            List<Point> Memory = new List<Point>();
+            List<Point>[] Memory = new List<Point>[Iterations];
 
 
             // Создаём массив и заполняем его нулями. Пока оставим, потом, скорее всего, доделаю в класс.
@@ -28,11 +34,14 @@ namespace Molybdenum
             // Создадим генератор случайных чисел
             Random random = new Random();
 
+            Console.WriteLine($"*** -> Поиск связей");
+
             // Основной цикл
             for (int i=0; i < Iterations; i++)
             {
-                // Создание объектов A и B. Более точные их названия не даны.
+                Console.WriteLine($"Итерация №{i}");
 
+                // Создание объектов A и B. Более точные их названия не даны.
                 DoubleArray A = new DoubleArray();
                 SingleArray B = new SingleArray();
                 List<Point> memory = new List<Point>();
@@ -43,6 +52,9 @@ namespace Molybdenum
                     // Поис ко массивам
                     int n1 = Search(B);
                     int n2 = Search(A.Row(n1));
+
+                    // Если не нашли, продолжим цикл
+                    if (n1 == -1 || n2 == -1) continue;
 
                     // Обнулим найденные элементы
                     A.ZeroRow(n1);
@@ -56,12 +68,36 @@ namespace Molybdenum
                 // Удаление первого элемента
                 memory.RemoveAt(0);
 
-                // Добавление в основной список
-                Memory.AddRange(memory);
+                // Добавление в основной список. ToList() используется для создания нового объекта
+                Memory[i] = memory.ToList();
 
                 // Запишем количество значений
                 Connections[i] = memory.Count;
             }
+
+            // Создадим переменную для одинаковых вариантов
+            int IdenticalVariants = 0;
+
+            // Отсортируем все элементы внутри отдельных блоков
+            Console.WriteLine($"*** -> Сортировка");
+            foreach (List<Point> list in Memory)
+                list.Sort(ComparePoints);
+
+            // Найдём повторы
+            Console.WriteLine($"*** -> Поиск повторов");
+            for (int i = 0; i < Iterations; i++)
+                for (int j = i + 1; j < Iterations; j++)
+                    if (Memory[i].Equals(Memory[j]))
+                        IdenticalVariants++;
+
+            // Вычисление cреднеарифметического количества присоединенных молекул
+            double MeanMolecules = Connections.Average();
+
+            //Вывод результата
+            Console.WriteLine("\n\n************  РЕЗУЛЬТАТ  ************\n");
+            Console.WriteLine($"Количество одинаковых вариантов: {IdenticalVariants}");
+            Console.WriteLine($"Среднеарифметическое количество присоединенных молекул: {MeanMolecules}");
+            Console.WriteLine(  "\n*************************************");
         }
 
 
@@ -72,12 +108,15 @@ namespace Molybdenum
         /// <returns></returns>
         static private int Search(SingleArray SA)
         {
+            // Проверим, не нулевой ли блок мы рассматриваем
+            if (SA.Total == 0) return -1;
+            
             // Получим случайное число
             int RandomValue = random.Next(0, SA.Total - 1);
 
             // Зададим начальные значения
             int S = 0;
-            int n1 = 0;
+            int n1 = -1;
 
             // И пройдёмся по всем элементам B
             for (int j = 0; j < 12; j++)
@@ -94,6 +133,17 @@ namespace Molybdenum
             }
 
             return n1;
+        }
+
+        /// <summary>
+        /// Функция для сравнения двух связей
+        /// </summary>
+        /// <param name="p1">Первая связь</param>
+        /// <param name="p2">Вторая связь</param>
+        /// <returns>Результат сравнения</returns>
+        public static int ComparePoints(Point p1, Point p2)
+        {
+            return p1.X - p2.X;
         }
     }
 }
