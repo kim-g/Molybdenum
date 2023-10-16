@@ -36,5 +36,19 @@ namespace Molybdenum
             set => data=value; 
         }
 
+        /// <summary>
+        /// Сумма всех элементов массива
+        /// </summary>
+        public int Total
+        {
+            get
+            {
+                int Sum = 0;
+                foreach (byte item in data)
+                    Sum += item;
+                return Sum;
+            }
+        }
+
     }
 }

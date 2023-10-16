@@ -25,6 +25,10 @@ namespace Molybdenum
             // Основной цикл
             for (int i=0; i < Iterations; i++)
             {
+                // Создание объектов A и B. Более точные их названия не даны.
+
+                DoubleArray A = new DoubleArray();
+                SingleArray B = new SingleArray();
 
             }
         }
