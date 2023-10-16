@@ -11,7 +11,9 @@ namespace Molybdenum
     /// </summary>
     internal class DoubleArray
     {
-        private byte[,] data = new byte[12,12] 
+        const int size = 12;
+        
+        private byte[,] data = new byte[size, size] 
         {
             {0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0}, 
             {1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1}, 
@@ -48,6 +50,52 @@ namespace Molybdenum
                     Sum += item;
                 return Sum;
             }
+        }
+
+        /// <summary>
+        /// Сумма всех элементов строки
+        /// </summary>
+        /// <param name="row">Номер строки</param>
+        /// <returns>Сумма</returns>
+        public int TotalRow(int row)
+        {
+            // Защита от дурака
+            if (row < 0) return 0;
+            if (row >= size) return 0;
+
+            // Получение суммы
+            int Sum = 0;
+            for (int i = 0; i < size; i++)
+                Sum += data[row, i];
+            return Sum;
+        }
+
+        /// <summary>
+        /// Выдаёт одну строку как SingleArray объект
+        /// </summary>
+        /// <param name="row">Номер строки</param>
+        /// <returns>Строка</returns>
+        public SingleArray Row(int row)
+        {
+            // Защита от дурака
+            if (row < 0) return null;
+            if (row >= size) return null;
+
+            // Создание строки
+            SingleArray NewRow = new SingleArray();
+            for (int i=0; i<size; i++)
+                NewRow.Data[i] = data[row, i];
+            return NewRow;
+        }
+
+        /// <summary>
+        /// Обнуление строки. То есть, содержимое строки превращается в нули.
+        /// </summary>
+        /// <param name="row">Номер строки</param>
+        public void ZeroRow(int row)
+        {
+            for (int i = 0; i < size; i++)
+                data[row, i] = 0;
         }
 
     }
