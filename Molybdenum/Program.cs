@@ -53,6 +53,7 @@ namespace Molybdenum
                 {
                     // Поис ко массивам
                     int n1 = Search(B);
+                    if (n1 == -1) continue;
                     int n2 = Search(A.Row(n1));
 
                     // Если не нашли, продолжим цикл
@@ -111,10 +112,13 @@ namespace Molybdenum
         static private int Search(SingleArray SA)
         {
             // Проверим, не нулевой ли блок мы рассматриваем
+            if (SA == null) return -1;
             if (SA.Total == 0) return -1;
-            
+
             // Получим случайное число
-            int RandomValue = random.Next(0, SA.Total - 1);
+            List<int> FreeCells = SA.GetFree();
+            int RandomIndex = random.Next(0, FreeCells.Count - 1);
+            int RandomValue = FreeCells[RandomIndex];
 
             // Зададим начальные значения
             int S = 0;
