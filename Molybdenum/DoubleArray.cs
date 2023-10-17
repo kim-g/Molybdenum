@@ -98,5 +98,20 @@ namespace Molybdenum
                 data[row, i] = 0;
         }
 
+
+        /// <summary>
+        /// Выдаёт список незадействованных связей
+        /// </summary>
+        /// <returns></returns>
+        public List<int> GetFree()
+        {
+            List<int> FreeCells = new List<int>();
+
+            for (int i = 0; i < size; i++)
+                if (Row(i).Total > 0) FreeCells.Add(i);
+
+            return FreeCells;
+        }
+
     }
 }

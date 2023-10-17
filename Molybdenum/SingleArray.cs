@@ -8,7 +8,9 @@ namespace Molybdenum
 {
     internal class SingleArray
     {
-        private byte[] data = new byte[12]
+        const int size = 12;
+        
+        private byte[] data = new byte[size]
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
         /// <summary>
@@ -32,6 +34,20 @@ namespace Molybdenum
                     Sum += item;
                 return Sum;
             }
+        }
+
+        /// <summary>
+        /// Выдаёт список незадействованных связей
+        /// </summary>
+        /// <returns></returns>
+        public List<int> GetFree()
+        {
+            List<int> FreeCells = new List<int>();
+
+            for (int i = 0; i < size; i++)
+                if (Data[i] > 0) FreeCells.Add(i);
+
+            return FreeCells;
         }
     }
 }
