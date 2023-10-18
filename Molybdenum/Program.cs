@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ namespace Molybdenum
 
         static void Main(string[] args)
         {
+            string StartTime = DateTime.Now.ToString();
+
             // Запуск программы
             Console.WriteLine("*************************************");
             Console.WriteLine("************  Molybdenum  ***********");
@@ -37,7 +40,7 @@ namespace Molybdenum
             Console.WriteLine($"*** -> Поиск связей");
 
             // Основной цикл
-            for (int i=0; i < Iterations; i++)
+            for (int i = 0; i < Iterations; i++)
             {
                 Console.WriteLine($"Итерация №{i}");
 
@@ -54,7 +57,15 @@ namespace Molybdenum
                     // Поис ко массивам
                     int n1 = Search(B);
                     if (n1 == -1) continue;
-                    int n2 = Search(A.Row(n1));
+                    SingleArray A_Row = A.Row(n1);
+
+                    // Проверим, не пустой ли слой. Чтобы не тормозилось.
+                    if (A_Row.Total == 0)
+                    {
+                        B.Data[n1] = 0;
+                        continue;
+                    }
+                    int n2 = Search(A_Row);
 
                     // Если не нашли, продолжим цикл
                     if (n1 == -1 || n2 == -1) continue;
@@ -69,7 +80,7 @@ namespace Molybdenum
                 }
 
                 // Удаление первого элемента
-                memory.RemoveAt(0);
+                //memory.RemoveAt(0);
 
                 // Добавление в основной список. ToList() используется для создания нового объекта
                 Memory[i] = memory.ToList();
@@ -90,17 +101,44 @@ namespace Molybdenum
             Console.WriteLine($"*** -> Поиск повторов");
             for (int i = 0; i < Iterations; i++)
                 for (int j = i + 1; j < Iterations; j++)
-                    if (Memory[i].Equals(Memory[j]))
+                    if (Equals(Memory[i], Memory[j]))
                         IdenticalVariants++;
 
             // Вычисление cреднеарифметического количества присоединенных молекул
             double MeanMolecules = Connections.Average();
+
+            // Выведем в CSV файл
+            Console.WriteLine($"*** -> Сохранение в файл");
+            string CurTime = DateTime.Now.ToString();
+            string CurTimeName = CurTime.Replace(':', '-');
+            using (StreamWriter FS = new StreamWriter($"{CurTimeName} – Moliblenum result.csv", false, Encoding.UTF8))
+            {
+                FS.WriteLine("Поиск возможных расположений молекул на поверхности молиоксометаллата");
+                FS.WriteLine($"Дата и время запуска;{StartTime}");
+                FS.WriteLine($"Дата и время остановки;{CurTime}");
+                FS.WriteLine($"Количество итераций;{Iterations}");
+                FS.WriteLine($"Количество одинаковых вариантов;{IdenticalVariants}");
+                FS.WriteLine($"Среднеарифметическое количество присоединенных молекул;{MeanMolecules}");
+                FS.WriteLine($"");
+                FS.WriteLine($"№;Соединения;1;2;3;4;5;6;7;8;9;10;11;12");
+                
+                for (int i = 0; i < Iterations; i++)
+                {
+                    string Outline = $"{i};{Connections[i]};";
+                    foreach (Point P in Memory[i])
+                    {
+                        Outline += $"{P.X}<->{P.Y};";
+                    }
+                    FS.WriteLine(Outline);
+                }
+            }
 
             //Вывод результата
             Console.WriteLine("\n\n************  РЕЗУЛЬТАТ  ************\n");
             Console.WriteLine($"Количество одинаковых вариантов: {IdenticalVariants}");
             Console.WriteLine($"Среднеарифметическое количество присоединенных молекул: {MeanMolecules}");
             Console.WriteLine(  "\n*************************************");
+            Console.ReadLine();
         }
 
 
@@ -120,25 +158,7 @@ namespace Molybdenum
             int RandomIndex = random.Next(0, FreeCells.Count - 1);
             int RandomValue = FreeCells[RandomIndex];
 
-            // Зададим начальные значения
-            int S = 0;
-            int n1 = -1;
-
-            // И пройдёмся по всем элементам B
-            for (int j = 0; j < 12; j++)
-            {
-                S += SA.Data[j];
-
-                // Если совпало со случайным значением
-                if (RandomValue == S)
-                {
-                    // Запомним его и прервём цикл.
-                    n1 = j;
-                    break;
-                }
-            }
-
-            return n1;
+            return RandomValue;
         }
 
         /// <summary>
@@ -150,6 +170,24 @@ namespace Molybdenum
         public static int ComparePoints(Point p1, Point p2)
         {
             return p1.X - p2.X;
+        }
+
+        /// <summary>
+        /// Сравнение двух массивов точек
+        /// </summary>
+        /// <param name="X">Первый массив</param>
+        /// <param name="Y">Второй массив</param>
+        /// <returns>Равны ли массивы</returns>
+        private static bool Equals(List<Point>X, List<Point> Y)
+        {
+            if (X.Count != Y.Count) return false;
+            for (int i=0; i < X.Count; i++)
+            {
+                if (X[i].X != Y[i].X) return false;
+                if (X[i].Y != Y[i].Y) return false;
+            }
+
+            return true;
         }
     }
 }
