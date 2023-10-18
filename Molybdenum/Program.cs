@@ -23,7 +23,23 @@ namespace Molybdenum
             Console.WriteLine("*************************************\n\n");
 
             // Количество итераций
-            const int Iterations = 10000;
+            int Iterations = 1000000;
+            bool IterGot = false;
+            while (!IterGot)
+            {
+                Console.Write("Введите количество итераций: ");
+                string Iter = Console.ReadLine();
+                try
+                {
+                    Iterations = Convert.ToInt32(Iter);
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine($"Строка «{Iter}» не является числом! Пожалуёста, введите целое положительное число.\n");
+                    continue;
+                }
+                IterGot = true;
+            }
 
             // Список результатов.
             // Комментарий переводчика. Понятия не имею, зачем тут нужен трёхмерный массив, по всем данным достаточно двумерного.
@@ -42,7 +58,7 @@ namespace Molybdenum
             // Основной цикл
             for (int i = 0; i < Iterations; i++)
             {
-                Console.WriteLine($"Итерация №{i}");
+                if (i%1000 == 0) Console.WriteLine($"Итерация №{i}");
 
                 // Создание объектов A и B.
                 // A - матрица инцидентности, строка - порядковый номер узла, столбик - в направлении какого узла есть мостик, 1 - есть мостик, 0 - нет мостика.
@@ -100,9 +116,13 @@ namespace Molybdenum
             // Найдём повторы
             Console.WriteLine($"*** -> Поиск повторов");
             for (int i = 0; i < Iterations; i++)
+            {
+                if (i % 1000 == 0) Console.WriteLine($"Итерация №{i}");
+
                 for (int j = i + 1; j < Iterations; j++)
                     if (Equals(Memory[i], Memory[j]))
                         IdenticalVariants++;
+            }
 
             // Вычисление cреднеарифметического количества присоединенных молекул
             double MeanMolecules = Connections.Average();
