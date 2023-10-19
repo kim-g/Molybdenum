@@ -33,6 +33,11 @@ namespace Molybdenum
         /// </summary>
         string StartTime;
 
+        /// <summary>
+        /// Количество потоков для распараллеливания
+        /// </summary>
+        int Threads = 1;
+
         public Searcher ()
         {
             // Запуск программы
@@ -45,23 +50,22 @@ namespace Molybdenum
         /// <summary>
         /// Запрос у пользователя количества итераций
         /// </summary>
-        public void GetIterations()
+        public int GetInt(string TextLabel)
         {
-            bool IterGot = false;
-            while (!IterGot)
+
+            while (true)
             {
-                Console.Write("Введите количество итераций: ");
+                Console.Write(TextLabel);
                 string Iter = Console.ReadLine();
                 try
                 {
-                    Iterations = Convert.ToInt32(Iter);
+                    return Convert.ToInt32(Iter);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Строка «{Iter}» не является числом! Пожалуёста, введите целое положительное число.\n");
+                    Console.WriteLine($"Строка «{Iter}» не является числом! Пожалуйста, введите целое положительное число.\n");
                     continue;
                 }
-                IterGot = true;
             }
         }
 
@@ -71,7 +75,8 @@ namespace Molybdenum
         public void Run()
         {
             StartTime = DateTime.Now.ToString();
-            GetIterations();
+            Iterations = GetInt("Введите количество итераций: ");
+            Threads = GetInt("Введите количество потоков: ");
 
             Memory = new List<Point>[Iterations];
             Connections = new int[Iterations];
@@ -206,14 +211,29 @@ namespace Molybdenum
         {
             // Найдём повторы
             Console.WriteLine($"*** -> Поиск повторов");
-            for (int i = 0; i < Iterations; i++)
+            for (int i = 0; i < Iterations; i+=Threads)
             {
-                if (i % 1000 == 0) Console.WriteLine($"Итерация №{i}");
-
-                for (int j = i + 1; j < Iterations; j++)
-                    if (Equals(Memory[i], Memory[j]))
-                        IdenticalVariants++;
+                List<Task> LT = new List<Task>();
+                for (int j = 0; j < Threads; j++)
+                {
+                    int Iter = i + j;
+                    if (Iter % 1000 == 0) Console.WriteLine($"Итерация №{Iter}");
+                    if (Iter >= Iterations) break;
+                    LT.Add(Task.Run(() => SearchOneLine(Iter)));
+                }
+                Task.WaitAll(LT.ToArray());
             }
+        }
+
+        /// <summary>
+        ////Функция поиска повторов для одной строки.
+        /// </summary>
+        /// <param name="i"></param>
+        private void SearchOneLine(int i)
+        {
+            for (int j = i + 1; j < Iterations; j++)
+                if (Equals(Memory[i], Memory[j]))
+                    IdenticalVariants++;
         }
 
         private void PrintResults()
