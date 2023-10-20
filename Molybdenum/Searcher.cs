@@ -94,54 +94,66 @@ namespace Molybdenum
             Console.WriteLine($"*** -> Поиск связей");
 
             // Основной цикл
-            for (int i = 0; i < Iterations; i++)
+            for (int i = 0; i < Iterations; i += Threads)
             {
-                if (i % 1000 == 0) Console.WriteLine($"Итерация №{i}");
-
-                // Создание объектов A и B.
-                // A - матрица инцидентности, строка - порядковый номер узла, столбик - в направлении какого узла есть мостик, 1 - есть мостик, 0 - нет мостика.
-                // B - матрица свободных узлов, к которым может идти присоединение
-                DoubleArray A = new DoubleArray();
-                SingleArray B = new SingleArray();
-                List<Point> memory = new List<Point>();
-
-                // Выполняем общий поиск пока не найдём все связи
-                while (B.Total != 0 && A.Total != 0)
+                List<Task> SearchTasks = new List<Task>();
+                for (int j=0; j<Threads; j++)
                 {
-                    // Поис ко массивам
-                    int n1 = Search(B);
-                    if (n1 == -1) continue;
-                    SingleArray A_Row = A.Row(n1);
-
-                    // Проверим, не пустой ли слой. Чтобы не тормозилось.
-                    if (A_Row.Total == 0)
-                    {
-                        B.Data[n1] = 0;
-                        continue;
-                    }
-                    int n2 = Search(A_Row);
-
-                    // Если не нашли, продолжим цикл
-                    if (n1 == -1 || n2 == -1) continue;
-
-                    // Обнулим найденные элементы
-                    A.ZeroRow(n1);
-                    B.Data[n1] = 0;
-                    A.Data[n2, n1] = 0;
-
-                    // Добавим в список
-                    memory.Add(new Point(n1, n2));
+                    int Iter = i + j;
+                    if (Iter >= Iterations) break;
+                    SearchTasks.Add(Task.Run(() => { SearchConnectionsOneLine(Iter); }));
                 }
-
-                // Удаление первого элемента
-                //memory.RemoveAt(0);
-
-                // Добавление в основной список. ToList() используется для создания нового объекта
-                Memory[i] = memory.ToList();
-
-                // Запишем количество значений
-                Connections[i] = memory.Count;
+                Task.WaitAll(SearchTasks.ToArray());
             }
+        }
+
+        private void SearchConnectionsOneLine(int i)
+        {
+            if (i % 1000 == 0) Console.WriteLine($"Итерация №{i}");
+
+            // Создание объектов A и B.
+            // A - матрица инцидентности, строка - порядковый номер узла, столбик - в направлении какого узла есть мостик, 1 - есть мостик, 0 - нет мостика.
+            // B - матрица свободных узлов, к которым может идти присоединение
+            DoubleArray A = new DoubleArray();
+            SingleArray B = new SingleArray();
+            List<Point> memory = new List<Point>();
+
+            // Выполняем общий поиск пока не найдём все связи
+            while (B.Total != 0 && A.Total != 0)
+            {
+                // Поис ко массивам
+                int n1 = Search(B);
+                if (n1 == -1) continue;
+                SingleArray A_Row = A.Row(n1);
+
+                // Проверим, не пустой ли слой. Чтобы не тормозилось.
+                if (A_Row.Total == 0)
+                {
+                    B.Data[n1] = 0;
+                    continue;
+                }
+                int n2 = Search(A_Row);
+
+                // Если не нашли, продолжим цикл
+                if (n1 == -1 || n2 == -1) continue;
+
+                // Обнулим найденные элементы
+                A.ZeroRow(n1);
+                B.Data[n1] = 0;
+                A.Data[n2, n1] = 0;
+
+                // Добавим в список
+                memory.Add(new Point(n1, n2));
+            }
+
+            // Удаление первого элемента
+            //memory.RemoveAt(0);
+
+            // Добавление в основной список. ToList() используется для создания нового объекта
+            Memory[i] = memory.ToList();
+
+            // Запишем количество значений
+            Connections[i] = memory.Count;
         }
 
         /// <summary>
